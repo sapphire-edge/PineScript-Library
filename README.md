@@ -1,1 +1,1 @@
-# PineScript-Strategies-Indicators-
+# PineScript-Strategies-Indicators
