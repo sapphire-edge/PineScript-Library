@@ -12,9 +12,7 @@
 // #                                      
 // # ========================================================================= #
 
-strategyTitle = "Sapphire RSI Divergence"
-strategy(title=strategyTitle, shorttitle=strategyTitle, overlay=true, initial_capital=50000, currency=currency.USD, default_qty_value=2, pyramiding=2, commission_type=strategy.commission.cash_per_contract, commission_value=2.36)
-
+strategy(title="Sapphire RSI Divergence", shorttitle="[Sapphire] RSI Divergence Strategy", overlay=true, initial_capital=50000, currency=currency.USD, default_qty_value=2, pyramiding=2, commission_type=strategy.commission.cash_per_contract, commission_value=2.36)
 
 // # ========================================================================= #
 // #                       // Settings Menu //
@@ -72,8 +70,6 @@ isWithinTradingWindow(startHour, startMinute, endHour, endMinute) =>
     endInMinutes = endHour * 60 + endMinute
     timeInMinutes >= startInMinutes and timeInMinutes <= endInMinutes
 
-
-
 // # ========================================================================= #
 // #                       // Calculations //                                  #
 // # ========================================================================= #
@@ -96,8 +92,6 @@ phFound = not na(ta.pivothigh(osc, lbL, lbR))
 _inRange(cond) =>
     bars = ta.barssince(cond)
     rangeLower <= bars and bars <= rangeUpper
-
-
 
 // # ========================================================================= #
 // #                       // Signal Logic //                                  #
@@ -130,8 +124,6 @@ longCondition = (bullCond or hiddenBullCond) and timeCondition and dateRangeCond
 shortCondition = (bearCond or hiddenBearCond) and timeCondition and dateRangeCondition
 longCloseCondition = ta.crossover(osc, takeProfitRSILevel) or bearCond
 
-
-
 // # ========================================================================= #
 // #                         // Strategy Management //
 // # ========================================================================= #
@@ -141,8 +133,6 @@ strategy.entry(id="RSIDivSE", direction=strategy.short, when=shortCondition)
 
 strategy.close(id="RSIDivLE", when=longCloseCondition)
 strategy.close(id="RSIDivSE", when=ta.crossunder(osc, 30))
-
-
 
 // # ========================================================================= #
 // #                         // Alerts //                                       #
@@ -157,8 +147,6 @@ alertcondition(longCondition, title="Long Entry", message="Long entry condition 
 alertcondition(shortCondition, title="Short Entry", message="Short entry condition met.")
 alertcondition(longCloseCondition, title="Long Exit", message="Long exit condition met.")
 alertcondition(ta.crossunder(osc, 30), title="Short Exit", message="Short exit condition met.")
-
-
 
 // # ========================================================================= #
 // #                         // Plots and Charts //
