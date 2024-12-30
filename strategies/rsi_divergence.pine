@@ -12,7 +12,7 @@
 // #                                      
 // # ========================================================================= #
 
-strategy(title="Sapphire RSI Divergence", shorttitle="[Sapphire] RSI Divergence Strategy", overlay=true, initial_capital=50000, currency=currency.USD, default_qty_value=2, pyramiding=2, commission_type=strategy.commission.cash_per_contract, commission_value=2.36)
+strategy(title="[Sapphire] RSI Divergence Strategy", shorttitle="⟡Sapphire⟡ RSI Divergence Strategy", overlay=true, initial_capital=50000, currency=currency.USD, default_qty_value=2, pyramiding=2, commission_type=strategy.commission.cash_per_contract, commission_value=2.36)
 
 // # ========================================================================= #
 // #                       // Settings Menu //
