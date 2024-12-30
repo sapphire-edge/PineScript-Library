@@ -1,0 +1,128 @@
+//@version=5
+// © sapphire_edge 
+
+// # ========================================================================= #
+// #                  
+// #        _____                   __    _              ______    __         
+// #      / ___/____ _____  ____  / /_  (_)_______     / ____/___/ /___ ____ 
+// #      \__ \/ __ `/ __ \/ __ \/ __ \/ / ___/ _ \   / __/ / __  / __ `/ _ \
+// #     ___/ / /_/ / /_/ / /_/ / / / / / /  /  __/  / /___/ /_/ / /_/ /  __/
+// #    /____/\__,_/ .___/ .___/_/ /_/_/_/   \___/  /_____/\__,_/\__, /\___/ 
+// #              /_/   /_/                                     /____/       
+// #                                      
+// # ========================================================================= #
+
+indicator(shorttitle="⟡Sapphire⟡ RSI Divergence ", title="[Sapphire] RSI Divergence Indicator", overlay=false)
+
+// # ========================================================================= #
+// #                       // Settings Menu //
+// # ========================================================================= #
+
+// --------------------    Indicator Settings    -------------------- //
+groupRSI = "RSI Divergence Settings"
+len = input.int(title='RSI Period', minval=1, defval=9, group=groupRSI)
+src = input(title='RSI Source', defval=close, group=groupRSI)
+lbR = input.int(title='Pivot Lookback Right', defval=3, group=groupRSI)
+lbL = input.int(title='Pivot Lookback Left', defval=1, group=groupRSI)
+takeProfitRSILevel = input.int(title='Take Profit at RSI Level', minval=70, defval=80, group=groupRSI)
+rangeUpper = input.int(title='Max of Lookback Range', defval=60, group=groupRSI)
+rangeLower = input.int(title='Min of Lookback Range', defval=5, group=groupRSI)
+plotBull = input.bool(title='Plot Bullish', defval=true, group=groupRSI)
+plotHiddenBull = input.bool(title='Plot Hidden Bullish', defval=true, group=groupRSI)
+plotBear = input.bool(title='Plot Bearish', defval=true, group=groupRSI)
+plotHiddenBear = input.bool(title='Plot Hidden Bearish', defval=false, group=groupRSI)
+
+// --------------------    Time Filter Inputs    -------------------- //
+groupTimeOfDayFilter = "Time of Day Filter"
+useTimeFilter1  = input.bool(false, title="Enable Time Filter 1", group=groupTimeOfDayFilter)
+startHour1      = input.int(0, title="Start Hour (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+startMinute1    = input.int(0, title="Start Minute", minval=0, maxval=59, group=groupTimeOfDayFilter)
+endHour1        = input.int(23, title="End Hour (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+endMinute1      = input.int(45, title="End Minute", minval=0, maxval=59, group=groupTimeOfDayFilter)
+
+useTimeFilter2  = input.bool(false, title="Enable Time Filter 2", group=groupTimeOfDayFilter)
+startHour2      = input.int(0, title="Start Hour 2 (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+startMinute2    = input.int(0, title="Start Minute 2", minval=0, maxval=59, group=groupTimeOfDayFilter)
+endHour2        = input.int(23, title="End Hour 2 (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+endMinute2      = input.int(45, title="End Minute 2", minval=0, maxval=59, group=groupTimeOfDayFilter)
+
+useTimeFilter3  = input.bool(false, title="Enable Time Filter 3", group=groupTimeOfDayFilter)
+startHour3      = input.int(0, title="Start Hour 3 (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+startMinute3    = input.int(0, title="Start Minute 3", minval=0, maxval=59, group=groupTimeOfDayFilter)
+endHour3        = input.int(23, title="End Hour 3 (24-hour format)", minval=0, maxval=23, group=groupTimeOfDayFilter)
+endMinute3      = input.int(45, title="End Minute 3", minval=0, maxval=59, group=groupTimeOfDayFilter)
+
+// --------------------    Trading Window    -------------------- //
+isWithinTradingWindow(startHour, startMinute, endHour, endMinute) =>
+    nyTime            = timestamp("America/New_York", year, month, dayofmonth, hour, minute)
+    nyHour            = hour(nyTime)
+    nyMinute          = minute(nyTime)
+    timeInMinutes     = nyHour * 60 + nyMinute
+    startInMinutes    = startHour * 60 + startMinute
+    endInMinutes      = endHour * 60 + endMinute
+    timeInMinutes    >= startInMinutes and timeInMinutes <= endInMinutes
+
+// Combined Time Filter
+timeCondition =  (useTimeFilter1 ? isWithinTradingWindow(startHour1, startMinute1, endHour1, endMinute1) : true) and (useTimeFilter2 ? isWithinTradingWindow(startHour2, startMinute2, endHour2, endMinute2) : true) and (useTimeFilter3 ? isWithinTradingWindow(startHour3, startMinute3, endHour3, endMinute3) : true)
+
+// # ========================================================================= #
+// #                       // Calculations //
+// # ========================================================================= #
+
+// --------------------    RSI Divergence Calculations    -------------------- //
+osc = ta.rsi(src, len)
+plFound = not na(ta.pivotlow(osc, lbL, lbR))
+phFound = not na(ta.pivothigh(osc, lbL, lbR))
+
+_inRange(cond) =>
+    bars = ta.barssince(cond)
+    rangeLower <= bars and bars <= rangeUpper
+
+oscHL = osc[lbR] > ta.valuewhen(plFound, osc[lbR], 1) and _inRange(plFound[1])
+priceLL = low[lbR] < ta.valuewhen(plFound, low[lbR], 1)
+bullCond = plotBull and priceLL and oscHL and plFound
+
+oscLL = osc[lbR] < ta.valuewhen(plFound, osc[lbR], 1) and _inRange(plFound[1])
+priceHL = low[lbR] > ta.valuewhen(plFound, low[lbR], 1)
+hiddenBullCond = plotHiddenBull and priceHL and oscLL and plFound
+
+oscLH = osc[lbR] < ta.valuewhen(phFound, osc[lbR], 1) and _inRange(phFound[1])
+priceHH = high[lbR] > ta.valuewhen(phFound, high[lbR], 1)
+bearCond = plotBear and priceHH and oscLH and phFound
+
+oscHH = osc[lbR] > ta.valuewhen(phFound, osc[lbR], 1) and _inRange(phFound[1])
+priceLH = high[lbR] < ta.valuewhen(phFound, high[lbR], 1)
+hiddenBearCond = plotHiddenBear and priceLH and oscHH and phFound
+
+// # ========================================================================= #
+// #                         // Plots and Charts //
+// # ========================================================================= #
+
+// --------------------    Colors    -------------------- //
+bearColor = color.rgb(21, 146, 159)
+bullColor = color.rgb(7, 130, 85)
+hiddenBullColor = color.new(color.green, 70)
+hiddenBearColor = color.new(color.red, 80)
+
+// --------------------    Visualization    -------------------- //
+plot(osc, title='RSI', linewidth=2, color=color.blue)
+hline(70, title='Overbought Level', color=color.red, linestyle=hline.style_dotted)
+hline(30, title='Oversold Level', color=color.green, linestyle=hline.style_dotted)
+hline(50, title='Middle Line', color=color.gray, linestyle=hline.style_dashed)
+fill(obLevel, osLevel, title="Background", color=#9915FF, transp=90)
+plotshape(bullCond and timeCondition ? osc[lbR] : na, offset=-lbR, title='Regular Bullish Label', text='Bull', style=shape.labelup, location=location.absolute, color=color.green, textcolor=color.white)
+plotshape(hiddenBullCond and timeCondition ? osc[lbR] : na, offset=-lbR, title='Hidden Bullish Label', text='H Bull', style=shape.labelup, location=location.absolute, color=color.new(color.green, 70), textcolor=color.white)
+plotshape(bearCond and timeCondition ? osc[lbR] : na, offset=-lbR, title='Regular Bearish Label', text='Bear', style=shape.labeldown, location=location.absolute, color=color.red, textcolor=color.white)
+plotshape(hiddenBearCond and timeCondition ? osc[lbR] : na, offset=-lbR, title='Hidden Bearish Label', text='H Bear', style=shape.labeldown, location=location.absolute, color=color.new(color.red, 80), textcolor=color.white)
+
+// # ========================================================================= #
+// #                         // Alerts //                                       
+// # ========================================================================= #
+
+// --------------------    Trade Entry Alerts    -------------------- //
+alertcondition(bullCond and timeCondition, title="Regular Bullish Divergence", message="Regular Bullish Divergence detected.")
+alertcondition(hiddenBullCond and timeCondition, title="Hidden Bullish Divergence", message="Hidden Bullish Divergence detected.")
+
+// --------------------    Trade Exit Alerts    -------------------- //
+alertcondition(bearCond and timeCondition, title="Regular Bearish Divergence", message="Regular Bearish Divergence detected.")
+alertcondition(hiddenBearCond and timeCondition, title="Hidden Bearish Divergence", message="Hidden Bearish Divergence detected.")
