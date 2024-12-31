@@ -12,7 +12,7 @@
 // #                                      
 // # ========================================================================= #
 
-strategy(shorttitle="⟡Sapphire⟡ Fibonacci Setups Strategy", title="[Sapphire] Fibonacci Setups Strategy", overlay=true)
+strategy(shorttitle="⟡Sapphire⟡ Fibonacci Strategies", title="[Sapphire] Fibonacci Strategies", overlay=true)
 
 // # ========================================================================= #
 // #                       // Settings Menu //
