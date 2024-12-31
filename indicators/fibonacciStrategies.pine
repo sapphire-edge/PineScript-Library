@@ -12,7 +12,7 @@
 // #                                      
 // # ========================================================================= #
 
-indicator(shorttitle="⟡Sapphire⟡ Fibonacci Setups Indicators", title="[Sapphire] Fibonacci Setups Indicators", overlay=true)
+indicator(shorttitle="⟡Sapphire⟡ Fibonacci Strategies Indicators", title="[Sapphire] Fibonacci Strategies Indicators", overlay=true)
 
 // # ========================================================================= #
 // #                       // Settings Menu //
