@@ -1,6 +1,6 @@
 # Sapphire Edge
 
-Welcome to the PineScript Algo Library! 
+Welcome to the [PineScript Library]! 
 I will be posting my strategies and indicators here over time.
 In hopes of building a community of people who contribute onto this GitHub.
 If you have a strategy that you would like to contribute, reach out!
@@ -9,10 +9,14 @@ If you have a strategy that you would like to contribute, reach out!
 ---
 
 ## Strategies and Indicators
-
+```markdown
 1. FiboBands
 2. RSI Divergence
-
+3. Fibonacci Strategies
+   a. Sub-item 1
+   b. Sub-item 2
+   c. Sub-item 2
+```
 ---
 
 ## 2025 Objectives
