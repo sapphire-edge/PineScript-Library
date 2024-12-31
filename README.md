@@ -13,9 +13,9 @@ If you have a strategy that you would like to contribute, reach out!
 1. FiboBands
 2. RSI Divergence
 3. Fibonacci Strategies
-   a. Sub-item 1
-   b. Sub-item 2
-   c. Sub-item 2
+   a. Momentum Breakout
+   b. Mean Reversion
+   c. Fibonacci Retracement
 ```
 ---
 
