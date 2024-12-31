@@ -1,0 +1,135 @@
+//@version=5
+// © sapphire_edge 
+
+// # ========================================================================= #
+// #                  
+// #        _____                   __    _              ______    __         
+// #      / ___/____ _____  ____  / /_  (_)_______     / ____/___/ /___ ____ 
+// #      \__ \/ __ `/ __ \/ __ \/ __ \/ / ___/ _ \   / __/ / __  / __ `/ _ \
+// #     ___/ / /_/ / /_/ / /_/ / / / / / /  /  __/  / /___/ /_/ / /_/ /  __/
+// #    /____/\__,_/ .___/ .___/_/ /_/_/_/   \___/  /_____/\__,_/\__, /\___/ 
+// #              /_/   /_/                                     /____/       
+// #                                      
+// # ========================================================================= #
+
+indicator(shorttitle="⟡Sapphire⟡ Fibonacci Setups Indicators", title="[Sapphire] Fibonacci Setups Indicators", overlay=true)
+
+// # ========================================================================= #
+// #                       // Settings Menu //
+// # ========================================================================= #
+
+// --------------------    Indicator Settings    -------------------- //
+// Inputs for Momentum Breakouts
+groupMomentum = "Momentum Breakout"
+enableMomentumLong = input.bool(true, title="Enable Long Signals", group=groupMomentum)
+enableMomentumShort = input.bool(true, title="Enable Short Signals", group=groupMomentum)
+useEMAMomentum = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupMomentum)
+showMomentumPlots = input.bool(true, title="Show Plots?", group=groupMomentum)
+
+// Inputs for Mean Reversion
+groupMeanReversion = "Mean Reversion"
+enableMeanReversionLong = input.bool(true, title="Enable Long Signals", group=groupMeanReversion)
+enableMeanReversionShort = input.bool(true, title="Enable Short Signals", group=groupMeanReversion)
+useEMAMeanReversion = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupMeanReversion)
+showMeanReversionPlots = input.bool(true, title="Show Plots?", group=groupMeanReversion)
+
+// Inputs for Fibonacci Retracement
+groupFibonacci = "Fibonacci Retracement"
+enableFibonacciLong = input.bool(true, title="Enable Long Signals", group=groupFibonacci)
+enableFibonacciShort = input.bool(true, title="Enable Short Signals", group=groupFibonacci)
+useEMAFibonacci = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupFibonacci)
+showFibonacciPlots = input.bool(true, title="Show Plots?", group=groupFibonacci)
+
+// --------------------    Trading Window    -------------------- //
+groupTradingWindow = "Trading Window Settings"
+useTradingWindowFilter = input.bool(true, "Enable Trading Window (EST)", group=groupTradingWindow)
+showBackgroundFill = input.bool(true, "Show Background Fill", group=groupTradingWindow)
+tradingWindow = input.session("0930-1600:1234567", "Trading Window", group=groupTradingWindow)
+
+// Function to check if within the trading window
+isWithinTradingWindow(session) =>
+    not na(time("1", session, "America/New_York"))
+
+// Get the time condition based on the filter
+timeCondition = useTradingWindowFilter ? isWithinTradingWindow(tradingWindow) : true
+
+// Highlight the background during the trading window if the filter and toggle are enabled
+bgcolor(timeCondition and useTradingWindowFilter and showBackgroundFill ? color.new(color.blue, 90) : na)
+
+
+// # ========================================================================= #
+// #                       // Calculations //
+// # ========================================================================= #
+
+// Function to calculate SMA or EMA based on toggle
+getMA(source, length, useEMA) =>
+    useEMA ? ta.ema(source, length) : ta.sma(source, length)
+
+// Moving averages with SMA/EMA toggle
+maMomentum144 = getMA(close, 144, useEMAMomentum)
+maMomentum34 = getMA(close, 34, useEMAMomentum)
+
+maMeanReversion34 = getMA(close, 34, useEMAMeanReversion)
+maMeanReversion21 = getMA(close, 21, useEMAMeanReversion)
+
+maFibonacci13 = getMA(close, 13, useEMAFibonacci)
+maFibonacci55 = getMA(close, 55, useEMAFibonacci)
+
+// Momentum Breakouts logic
+momentumLongSignal = timeCondition and enableMomentumLong and ta.crossover(close, maMomentum144) and maMomentum144 > maMomentum34
+momentumShortSignal = timeCondition and enableMomentumShort and ta.crossunder(close, maMomentum144) and maMomentum34 > maMomentum144
+
+// Mean Reversion logic
+meanReversionLongSignal = timeCondition and enableMeanReversionLong and ta.crossover(close, maMeanReversion34) and maMeanReversion34 > maMeanReversion21
+meanReversionShortSignal = timeCondition and enableMeanReversionShort and ta.crossunder(close, maMeanReversion21) and maMeanReversion21 > maMeanReversion34
+
+// Fibonacci Retracement logic
+fibonacciLongSignal = timeCondition and enableFibonacciLong and ta.crossover(maFibonacci13, maFibonacci55)
+fibonacciShortSignal = timeCondition and enableFibonacciShort and ta.crossunder(maFibonacci13, maFibonacci55)
+
+// # ========================================================================= #
+// #                         // Plots and Charts //
+// # ========================================================================= #
+
+// --------------------    Visualization    -------------------- //
+plotMomentum144 = showMomentumPlots ? maMomentum144 : na
+plotMomentum34 = showMomentumPlots ? maMomentum34 : na
+
+plotMeanReversion34 = showMeanReversionPlots ? maMeanReversion34 : na
+plotMeanReversion21 = showMeanReversionPlots ? maMeanReversion21 : na
+
+plotFibonacci13 = showFibonacciPlots ? maFibonacci13 : na
+plotFibonacci55 = showFibonacciPlots ? maFibonacci55 : na
+
+plot(plotMomentum144, title="Momentum MA 144", color=color.red)
+plot(plotMomentum34, title="Momentum MA 34", color=color.blue)
+
+plot(plotMeanReversion34, title="Mean Reversion MA 34", color=color.blue)
+plot(plotMeanReversion21, title="Mean Reversion MA 21", color=color.green)
+
+plot(plotFibonacci13, title="Fibonacci MA 13", color=color.orange)
+plot(plotFibonacci55, title="Fibonacci MA 55", color=color.purple)
+
+plotshape(momentumLongSignal, title="Momentum Long", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
+plotshape(momentumShortSignal, title="Momentum Short", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+
+plotshape(meanReversionLongSignal, title="Mean Reversion Long", style=shape.triangleup, location=location.belowbar, color=color.blue, size=size.small)
+plotshape(meanReversionShortSignal, title="Mean Reversion Short", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small)
+
+plotshape(fibonacciLongSignal, title="Fibonacci Long", style=shape.triangleup, location=location.belowbar, color=color.purple, size=size.small)
+plotshape(fibonacciShortSignal, title="Fibonacci Short", style=shape.triangledown, location=location.abovebar, color=color.maroon, size=size.small)
+
+
+// # ========================================================================= #
+// #                         // Alerts //                                       
+// # ========================================================================= #
+
+// --------------------    Trade Entry Alerts    -------------------- //
+alertcondition(momentumLongSignal, title="Momentum Long Alert", message="Momentum Long Signal Triggered")
+alertcondition(momentumShortSignal, title="Momentum Short Alert", message="Momentum Short Signal Triggered")
+
+alertcondition(meanReversionLongSignal, title="Mean Reversion Long Alert", message="Mean Reversion Long Signal Triggered")
+alertcondition(meanReversionShortSignal, title="Mean Reversion Short Alert", message="Mean Reversion Short Signal Triggered")
+
+alertcondition(fibonacciLongSignal, title="Fibonacci Long Alert", message="Fibonacci Long Signal Triggered")
+alertcondition(fibonacciShortSignal, title="Fibonacci Short Alert", message="Fibonacci Short Signal Triggered")
