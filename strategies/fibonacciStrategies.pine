@@ -19,24 +19,28 @@ strategy(shorttitle="⟡Sapphire⟡ Fibonacci Setups Strategy", title="[Sapphire
 // # ========================================================================= #
 
 // --------------------    Indicator Settings    -------------------- //
+var string momentumTooltip = "Triggers when the price crosses above the 144-period moving average (MA) while the 144-period MA is above the 34-period MA for longs, or crosses below when the 34-period MA is above the 144-period MA for shorts."
+var string meanReversionTooltip = "Identifies potential reversals by checking when the price crosses above the 34-period MA with the 34-period MA above the 21-period MA for longs, or crosses below the 21-period MA with the 21-period MA above the 34-period MA for shorts."
+var string fibonacciTooltip = "Generates signals based on the crossover of the 13-period MA and the 55-period MA, indicating potential support/resistance levels for long and short entries."
+
 // Inputs for Momentum Breakouts
 groupMomentum = "Momentum Breakout"
-enableMomentumLong = input.bool(true, title="Enable Long Signals", group=groupMomentum)
-enableMomentumShort = input.bool(true, title="Enable Short Signals", group=groupMomentum)
+enableMomentumLong = input.bool(true, title="Enable Long Signals", group=groupMomentum, tooltip = momentumTooltip)
+enableMomentumShort = input.bool(true, title="Enable Short Signals", group=groupMomentum, tooltip = momentumTooltip)
 useEMAMomentum = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupMomentum)
 showMomentumPlots = input.bool(true, title="Show Plots?", group=groupMomentum)
 
 // Inputs for Mean Reversion
 groupMeanReversion = "Mean Reversion"
-enableMeanReversionLong = input.bool(true, title="Enable Long Signals", group=groupMeanReversion)
-enableMeanReversionShort = input.bool(true, title="Enable Short Signals", group=groupMeanReversion)
+enableMeanReversionLong = input.bool(true, title="Enable Long Signals", group=groupMeanReversion, tooltip = meanReversionTooltip)
+enableMeanReversionShort = input.bool(true, title="Enable Short Signals", group=groupMeanReversion, tooltip = meanReversionTooltip)
 useEMAMeanReversion = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupMeanReversion)
 showMeanReversionPlots = input.bool(true, title="Show Plots?", group=groupMeanReversion)
 
 // Inputs for Fibonacci Retracement
 groupFibonacci = "Fibonacci Retracement"
-enableFibonacciLong = input.bool(true, title="Enable Long Signals", group=groupFibonacci)
-enableFibonacciShort = input.bool(true, title="Enable Short Signals", group=groupFibonacci)
+enableFibonacciLong = input.bool(true, title="Enable Long Signals", group=groupFibonacci, tooltip = fibonacciTooltip)
+enableFibonacciShort = input.bool(true, title="Enable Short Signals", group=groupFibonacci, tooltip = fibonacciTooltip)
 useEMAFibonacci = input.bool(false, title="Use EMA? (Off: SMA,On: EMA)", group=groupFibonacci)
 showFibonacciPlots = input.bool(true, title="Show Plots?", group=groupFibonacci)
 
