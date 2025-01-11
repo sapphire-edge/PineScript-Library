@@ -1,0 +1,141 @@
+//@version=5
+// © sapphire_edge 
+
+// # ========================================================================= #
+// #                  
+// #       _____                   __    _              ______    __         
+// #      / ___/____ _____  ____  / /_  (_)_______     / ____/___/ /___ ____ 
+// #      \__ \/ __ `/ __ \/ __ \/ __ \/ / ___/ _ \   / __/ / __  / __ `/ _ \
+// #     ___/ / /_/ / /_/ / /_/ / / / / / /  /  __/  / /___/ /_/ / /_/ /  __/
+// #    /____/\__,_/ .___/ .___/_/ /_/_/_/   \___/  /_____/\__,_/\__, /\___/ 
+// #              /_/   /_/                                     /____/       
+// #                                      
+// # ========================================================================= #
+
+indicator("[Sapphire] JetStream (SWMA + Laguerre Filter)", shorttitle="⟡Sapphire⟡ JetStream v1.2", overlay=true)
+
+// # ========================================================================= #
+// #                       // Settings Menu //
+// # ========================================================================= #
+
+
+// Inputs for SWMA
+groupSWMA = "Sine Weighted Moving Average Settings"
+swmaLength = input.int(14, title="SWMA Length", group=groupSWMA)
+swmaSrc = input.source(close, title="SWMA Source", group=groupSWMA)
+
+// Inputs for Laguerre Filter
+groupLaguerre = "Laguerre Filter Settings"
+lagAlpha = input.float(0.1, title="Laguerre Alpha", minval=0, maxval=1, step=0.01, group=groupLaguerre)
+lagSrc = input.source(hl2, title="Laguerre Source", group=groupLaguerre)
+
+
+// Signal Customization Inputs
+groupSignals = "Signal Settings"
+showBothBullish = input.bool(true, title="Strong Bullish Signal", group=groupSignals)
+showBothBearish = input.bool(true, title="Strong Bearish Signal", group=groupSignals)
+showSWMABullish = input.bool(false, title="Weak Bullish Signal", group=groupSignals)
+showSWMABearish = input.bool(false, title="Weak Bearish Signal", group=groupSignals)
+
+groupSignalColors = "Signal Color Settings"
+bothBullishColor = input.color(#77ACA2, title="Strong Bullish Color", group=groupSignalColors)
+bothBearishColor = input.color(#E26D5C, title="Strong Bearish Color", group=groupSignalColors)
+swmaOnlyBullishColor = input.color(#77ACA2, title="Weak Bullish Color", group=groupSignalColors)
+swmaOnlyBearishColor = input.color(#E26D5C, title="Weak Bearish Color", group=groupSignalColors)
+
+// Inputs for SWMA Plot Colors
+groupSWMAPlots = "SWMA Plot Settings"
+swmaHighlightMovements = input.bool(true, title="Plot Sine Weighted Moving Average", group=groupSWMAPlots)
+swmaBullishColor = input.color(#8FBEC9, title="Bullish Color", group=groupSWMAPlots)
+swmaBearishColor = input.color(#383838, title="Bearish Color", group=groupSWMAPlots)
+ 
+// Inputs for Laguerre Plot Colors
+groupLaguerrePlots = "Laguerre Filter Plot Settings"
+lagColorChange = input.bool(true, title="Plot Laguerre Filter", group=groupLaguerrePlots)
+laguerreBullishColor = input.color(#6087b1, title="Bullish Color", group=groupLaguerrePlots)
+laguerreBearishColor = input.color(#FDFFF7, title="Bearish Color", group=groupLaguerrePlots)
+
+// Inputs for Bar Colors
+groupBarColors = "Bar Color Settings"
+repaintBarsToggle = input.bool(true, title="Allow Repainting Bars", group=groupBarColors)
+strongBullishBarColor = input.color(#AA7DCE, title="Strong Bullish Bar Color", group=groupBarColors)
+strongBearishBarColor = input.color(#505995, title="Strong Bearish Bar Color", group=groupBarColors)
+neutralBarColor = input.color(#C3C9E9, title="Neutral Bar Color", group=groupBarColors)
+
+
+// # ========================================================================= #
+// #                       // Calculations //
+// # ========================================================================= #
+
+// SWMA Calculation
+PI = 2 * math.asin(1)
+swmaSum = 0.0
+swmaWeightSum = 0.0
+
+for i = 0 to swmaLength - 1
+    weight = math.sin((i + 1) * PI / (swmaLength + 1))
+    swmaSum += nz(swmaSrc[i]) * weight
+    swmaWeightSum += weight
+
+swma = swmaSum / swmaWeightSum
+swmaColor = swmaHighlightMovements ? (swma > swma[1] ? swmaBullishColor : swmaBearishColor) : na
+
+// Laguerre Calculation
+lagGamma = 1 - lagAlpha
+var float lagL0 = na
+var float lagL1 = na
+var float lagL2 = na
+var float lagL3 = na
+
+lagL0 := (1 - lagGamma) * lagSrc + lagGamma * nz(lagL0[1])
+lagL1 := -lagGamma * lagL0 + nz(lagL0[1]) + lagGamma * nz(lagL1[1])
+lagL2 := -lagGamma * lagL1 + nz(lagL1[1]) + lagGamma * nz(lagL2[1])
+lagL3 := -lagGamma * lagL2 + nz(lagL2[1]) + lagGamma * nz(lagL3[1])
+lagF = (lagL0 + 2 * lagL1 + 2 * lagL2 + lagL3) / 6
+lagColor = lagColorChange ? (lagF > lagF[1] ? laguerreBullishColor : laguerreBearishColor) : na
+
+// Trend Logic
+swmaIsGreen = swma > swma[1]
+lagIsGreen = lagF > lagF[1]
+
+// Bar Coloring
+var color barColor = na
+if swmaIsGreen and lagIsGreen
+    barColor := strongBullishBarColor
+else if not swmaIsGreen and not lagIsGreen
+    barColor := strongBearishBarColor
+else
+    barColor := neutralBarColor
+
+// # ========================================================================= #
+// #                         // Signal Logic //
+// # ========================================================================= #
+
+bothBullish = swmaIsGreen and lagIsGreen
+bothBearish = not swmaIsGreen and not lagIsGreen
+swmaOnlyBullish = swmaIsGreen and not lagIsGreen
+swmaOnlyBearish = not swmaIsGreen and lagIsGreen
+
+bothBullishSignal = bothBullish and not nz(bothBullish[1], false)
+bothBearishSignal = bothBearish and not nz(bothBearish[1], false)
+swmaOnlyBullishSignal = swmaOnlyBullish and not nz(swmaOnlyBullish[1], false)
+swmaOnlyBearishSignal = swmaOnlyBearish and not nz(swmaOnlyBearish[1], false)
+
+
+// # ========================================================================= #
+// #                         // Plots and Charts //
+// # ========================================================================= #
+
+// Main Plots
+plot(swma, title="SWMA", color=swmaColor, linewidth=1)
+plot(lagF, title="Laguerre Filter", color=lagColor, linewidth=2)
+
+// Plot Shapes for Bullish/Bearish Conditions
+plotshape(showBothBullish and bothBullishSignal, style=shape.triangleup, location=location.belowbar, size=size.normal, color=bothBullishColor, title="Strong Bullish")
+plotshape(showBothBearish and bothBearishSignal, style=shape.triangledown, location=location.abovebar, size=size.normal, color=bothBearishColor, title="Strong Bearish")
+plotshape(showSWMABullish and swmaOnlyBullishSignal, style=shape.triangleup, location=location.belowbar, size=size.small, color=swmaOnlyBullishColor, title="Weak Bullish")
+plotshape(showSWMABearish and swmaOnlyBearishSignal, style=shape.triangledown, location=location.abovebar, size=size.small, color=swmaOnlyBearishColor, title="Weak Bearish")
+
+// Repaint Bars
+barcolor(repaintBarsToggle ? barColor : na, title="Bar Color")
+
